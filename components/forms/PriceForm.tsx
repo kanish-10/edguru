@@ -17,27 +17,27 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { updateCourse } from "@/action/courses.action";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
+  price: z.coerce.number(),
 });
 
-interface TitleFormProps {
+interface PriceFormProps {
   initialData: {
-    title: string;
+    price: number;
   };
   courseId: string;
 }
 
-const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
+const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: initialData.title,
+      price: initialData.price || undefined,
     },
   });
 
@@ -61,14 +61,14 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
   return (
     <div className="mt-6 rounded-md border bg-slate-100 p-4">
       <div className="flex items-center justify-between font-medium">
-        Course Title
+        Course Price
         <Button variant="ghost" onClick={toggleEdit}>
           {editing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="mr-2 size-4" />
-              Edit Title
+              Edit Price
             </>
           )}
         </Button>
@@ -77,10 +77,10 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
         <p
           className={cn(
             "mt-2 text-sm",
-            !initialData.title && "text-slate-500 italic",
+            !initialData.price && "text-slate-500 italic",
           )}
         >
-          {initialData.title}
+          {initialData.price ? formatPrice(initialData.price) : "No price"}
         </p>
       ) : (
         <Form {...form}>
@@ -90,13 +90,15 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
           >
             <FormField
               control={form.control}
-              name="title"
+              name="price"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
                     <Input
+                      type="number"
+                      step="0.01"
                       disabled={isSubmitting}
-                      placeholder="e.g. 'Advance Web Development'"
+                      placeholder="Set a price for your course"
                       {...field}
                     />
                   </FormControl>
@@ -116,4 +118,4 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
   );
 };
 
-export default TitleForm;
+export default PriceForm;

@@ -2,11 +2,12 @@ import { db } from "@/database/db";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import IconBadge from "@/components/shared/IconBadge";
-import { LayoutDashboard } from "lucide-react";
+import { IndianRupee, LayoutDashboard, ListChecks } from "lucide-react";
 import TitleForm from "@/components/forms/TitleForm";
 import DescriptionForm from "@/components/forms/DescriptionForm";
 import ImageForm from "@/components/forms/ImageForm";
 import CategoryForm from "@/components/forms/CategoryForm";
+import PriceForm from "@/components/forms/PriceForm";
 
 const CoursePage = async ({
   params: { courseId },
@@ -72,6 +73,22 @@ const CoursePage = async ({
               value: category.id,
             }))}
           />
+        </div>
+        <div className="space-y-6">
+          <div className="">
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={ListChecks} />
+              <h2 className="text-xl">Course chapters</h2>
+            </div>
+            <div>TODO: Chapters</div>
+          </div>
+          <div className="">
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={IndianRupee} />
+              <h2 className="text-xl">Sell your course</h2>
+            </div>
+            <PriceForm initialData={course} courseId={course.id} />
+          </div>
         </div>
       </div>
     </div>
