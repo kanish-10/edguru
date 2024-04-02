@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+
 import { Pencil } from "lucide-react";
-import { useState } from "react";
+
 import {
   Form,
   FormControl,
@@ -13,31 +16,39 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
-import { updateCourse } from "@/action/courses.action";
-import { Textarea } from "@/components/ui/textarea";
+import { Combobox } from "@/components/ui/combobox";
+import { Button } from "@/components/ui/button";
+
 import { cn } from "@/lib/utils";
 
-const formSchema = z.object({
-  description: z.string().min(20, { message: "Description is required" }),
-});
+import { Course } from "@prisma/client";
+import { toast } from "@/components/ui/use-toast";
+import { updateCourse } from "@/action/courses.action";
 
-interface DescriptionFormProps {
-  initialData: {
-    description: string;
-  };
+interface CategoryFormProps {
+  initialData: Course;
   courseId: string;
+  options: { label: string; value: string }[];
 }
 
-const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
+const formSchema = z.object({
+  categoryId: z.string().min(1),
+});
+
+const CategoryForm = ({
+  initialData,
+  courseId,
+  options,
+}: CategoryFormProps) => {
   const router = useRouter();
-  const [editing, setEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const toggleEdit = () => setIsEditing((current) => !current);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: initialData.description,
+      categoryId: initialData?.categoryId || "",
     },
   });
 
@@ -45,44 +56,45 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const onSubmit = async (value: z.infer<typeof formSchema>) => {
     try {
-      await updateCourse({ courseId, value });
-      toast({ title: "Course Description updated" });
+      await updateCourse({ value, courseId });
+      toast({ title: "Course updated" });
       toggleEdit();
       router.refresh();
-    } catch (e) {
+    } catch (error) {
       toast({ title: "Something went wrong", variant: "destructive" });
     }
   };
 
-  const toggleEdit = () => {
-    setEditing((prev) => !prev);
-  };
+  const selectedOption = options.find(
+    (option) => option.value === initialData.categoryId,
+  );
 
   return (
     <div className="mt-6 rounded-md border bg-slate-100 p-4">
       <div className="flex items-center justify-between font-medium">
-        Course Description
-        <Button variant="ghost" onClick={toggleEdit}>
-          {editing ? (
+        Course category
+        <Button onClick={toggleEdit} variant="ghost">
+          {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <Pencil className="mr-2 size-4" />
-              Edit Description
+              Edit category
             </>
           )}
         </Button>
       </div>
-      {!editing ? (
+      {!isEditing && (
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.description && "text-slate-500 italic",
+            !initialData.categoryId && "text-slate-500 italic",
           )}
         >
-          {initialData.description || "No description"}
+          {selectedOption?.label || "No category"}
         </p>
-      ) : (
+      )}
+      {isEditing && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -90,22 +102,18 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
           >
             <FormField
               control={form.control}
-              name="description"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      disabled={isSubmitting}
-                      placeholder="e.g. 'This will be an advance course from basic to master level.'"
-                      {...field}
-                    />
+                    <Combobox options={options} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="flex items-center gap-x-2">
-              <Button disabled={isSubmitting || !isValid} type="submit">
+              <Button disabled={!isValid || isSubmitting} type="submit">
                 Save
               </Button>
             </div>
@@ -116,4 +124,4 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   );
 };
 
-export default DescriptionForm;
+export default CategoryForm;
