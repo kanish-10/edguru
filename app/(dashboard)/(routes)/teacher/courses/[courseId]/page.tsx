@@ -2,12 +2,13 @@ import { db } from "@/database/db";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import IconBadge from "@/components/shared/IconBadge";
-import { IndianRupee, LayoutDashboard, ListChecks } from "lucide-react";
+import { File, IndianRupee, LayoutDashboard, ListChecks } from "lucide-react";
 import TitleForm from "@/components/forms/TitleForm";
 import DescriptionForm from "@/components/forms/DescriptionForm";
 import ImageForm from "@/components/forms/ImageForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import PriceForm from "@/components/forms/PriceForm";
+import AttachmentForm from "@/components/forms/AttachmentForm";
 
 const CoursePage = async ({
   params: { courseId },
@@ -22,6 +23,13 @@ const CoursePage = async ({
     where: {
       id: courseId,
       userId,
+    },
+    include: {
+      attachments: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 
@@ -88,6 +96,13 @@ const CoursePage = async ({
               <h2 className="text-xl">Sell your course</h2>
             </div>
             <PriceForm initialData={course} courseId={course.id} />
+          </div>
+          <div className="">
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={File} />
+              <h2 className="text-xl">Resources & Attachments</h2>
+            </div>
+            <AttachmentForm initialData={course} courseId={course.id} />
           </div>
         </div>
       </div>
