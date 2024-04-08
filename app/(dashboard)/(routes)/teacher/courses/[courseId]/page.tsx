@@ -3,12 +3,13 @@ import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import IconBadge from "@/components/shared/IconBadge";
 import { File, IndianRupee, LayoutDashboard, ListChecks } from "lucide-react";
-import TitleForm from "@/components/forms/TitleForm";
-import DescriptionForm from "@/components/forms/DescriptionForm";
-import ImageForm from "@/components/forms/ImageForm";
-import CategoryForm from "@/components/forms/CategoryForm";
-import PriceForm from "@/components/forms/PriceForm";
-import AttachmentForm from "@/components/forms/AttachmentForm";
+import TitleForm from "@/components/forms/course form/TitleForm";
+import DescriptionForm from "@/components/forms/course form/DescriptionForm";
+import ImageForm from "@/components/forms/course form/ImageForm";
+import CategoryForm from "@/components/forms/course form/CategoryForm";
+import PriceForm from "@/components/forms/course form/PriceForm";
+import AttachmentForm from "@/components/forms/course form/AttachmentForm";
+import ChapterForm from "@/components/forms/course form/ChapterForm";
 
 const CoursePage = async ({
   params: { courseId },
@@ -25,6 +26,11 @@ const CoursePage = async ({
       userId,
     },
     include: {
+      chapters: {
+        orderBy: {
+          position: "asc",
+        },
+      },
       attachments: {
         orderBy: {
           createdAt: "desc",
@@ -47,6 +53,7 @@ const CoursePage = async ({
     course.imageUrl,
     course.price,
     course.categoryId,
+    course.chapters.some((chapter: any) => chapter.isPublished),
   ];
 
   const totalFields = requiredFields.length;
@@ -88,7 +95,7 @@ const CoursePage = async ({
               <IconBadge icon={ListChecks} />
               <h2 className="text-xl">Course chapters</h2>
             </div>
-            <div>TODO: Chapters</div>
+            <ChapterForm initialData={course} courseId={course.id} />
           </div>
           <div className="">
             <div className="flex items-center gap-x-2">
