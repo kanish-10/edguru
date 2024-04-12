@@ -2,6 +2,12 @@
 
 import { auth } from "@clerk/nextjs";
 import { db } from "@/database/db";
+import Mux from "@mux/mux-node";
+
+const { video } = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID!,
+  tokenSecret: process.env.MUX_TOKEN_SECRET!,
+});
 
 interface CreateChapterProps {
   title: string;
@@ -117,6 +123,37 @@ export const updateChapter = async ({
         ...value,
       },
     });
+
+    if (value.videoUrl) {
+      const existingMuxData = await db.muxData.findFirst({
+        where: {
+          chapterId,
+        },
+      });
+      if (existingMuxData) {
+        await video.assets.delete(existingMuxData.assetId);
+        await db.muxData.delete({
+          where: {
+            id: existingMuxData.id,
+          },
+        });
+      }
+
+      const asset = await video.assets.create({
+        input: value.videoUrl,
+        playback_policy: ["public"],
+        test: false,
+      });
+
+      await db.muxData.create({
+        data: {
+          chapterId,
+          assetId: asset.id,
+          playbackId: asset.playback_ids?.[0]?.id,
+        },
+      });
+    }
+
     return chapter;
   } catch (e: any) {
     console.log("[CHAPTER]: ", e);
