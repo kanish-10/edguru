@@ -22,9 +22,6 @@ const ChapterIdPage = async ({
       id: chapterId,
       courseId,
     },
-    include: {
-      muxData: true,
-    },
   });
 
   if (!chapter) return redirect("/");
