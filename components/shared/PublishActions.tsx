@@ -11,26 +11,35 @@ import {
   publishChapter,
   unpublishChapter,
 } from "@/action/chapters.action";
+import {
+  deleteCourse,
+  publishCourse,
+  unpublishCourse,
+} from "@/action/courses.action";
+import { useConfettiStore } from "@/hooks/use-confetti-store";
 
 interface ChapterActionsProps {
   disabled: boolean;
   courseId: string;
-  chapterId: string;
+  chapterId?: string;
   isPublished: boolean;
+  type: "chapter" | "course";
 }
 
-const ChapterActions = ({
+const PublishActions = ({
   disabled,
   chapterId,
   isPublished,
   courseId,
+  type,
 }: ChapterActionsProps) => {
   const router = useRouter();
+  const confetti = useConfettiStore();
   const [loading, setLoading] = useState(false);
-  const onDelete = async () => {
+  const onDeleteChapter = async () => {
     try {
       setLoading(true);
-      await deleteChapter({ courseId, chapterId });
+      if (chapterId) await deleteChapter({ courseId, chapterId });
       toast({ title: "Chapter deleted" });
       router.refresh();
       router.push(`/teacher/courses/${courseId}`);
@@ -41,16 +50,50 @@ const ChapterActions = ({
     }
   };
 
-  const onClick = async () => {
+  const onDeleteCourse = async () => {
+    try {
+      setLoading(true);
+      await deleteCourse({ courseId });
+      toast({ title: "Course deleted" });
+      router.refresh();
+      router.push(`/teacher/courses`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Something went wrong" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const chapterPublish = async () => {
     try {
       setLoading(true);
       if (isPublished) {
-        await unpublishChapter({ courseId, chapterId });
+        if (chapterId) await unpublishChapter({ courseId, chapterId });
         toast({ title: "Chapter unpublished" });
         router.refresh();
       } else {
-        await publishChapter({ courseId, chapterId });
+        if (chapterId) await publishChapter({ courseId, chapterId });
         toast({ title: "Chapter published" });
+        router.refresh();
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Something went wrong" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const coursePublish = async () => {
+    try {
+      setLoading(true);
+      if (isPublished) {
+        await unpublishCourse({ courseId });
+        toast({ title: "Course unpublished" });
+        router.refresh();
+      } else {
+        await publishCourse({ courseId });
+        toast({ title: "Course published" });
+        confetti.onOpen();
         router.refresh();
       }
     } catch (e) {
@@ -63,14 +106,16 @@ const ChapterActions = ({
   return (
     <div className="flex items-center gap-x-2">
       <Button
-        onClick={onClick}
+        onClick={type === "chapter" ? chapterPublish : coursePublish}
         disabled={disabled || loading}
         variant="outline"
         size="sm"
       >
         {isPublished ? "Unpublish" : "Publish"}
       </Button>
-      <ConfirmModal onConfirm={onDelete}>
+      <ConfirmModal
+        onConfirm={type === "chapter" ? onDeleteChapter : onDeleteCourse}
+      >
         <Button size="sm" disabled={loading}>
           <Trash className="size-4" />
         </Button>
@@ -79,4 +124,4 @@ const ChapterActions = ({
   );
 };
 
-export default ChapterActions;
+export default PublishActions;
