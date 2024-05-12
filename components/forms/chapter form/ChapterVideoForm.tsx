@@ -4,7 +4,7 @@ import * as z from "zod";
 import { Pencil, PlusCircle, Video } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Chapter, MuxData } from "@prisma/client";
+import { Chapter } from "@prisma/client";
 import MuxPlayer from "@mux/mux-player-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { updateChapter } from "@/action/chapters.action";
 
 interface ChapterVideoFormProps {
-  initialData: Chapter & { muxData?: MuxData | null };
+  initialData: Chapter;
   courseId: string;
   chapterId: string;
 }
