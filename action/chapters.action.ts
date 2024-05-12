@@ -364,3 +364,40 @@ export const getChapter = async (
     };
   }
 };
+
+export const updateProgress = async ({
+  courseId,
+  chapterId,
+  isCompleted,
+}: {
+  courseId: string;
+  chapterId: string;
+  isCompleted: boolean;
+}) => {
+  try {
+    const { userId } = auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const userProgress = await db.userProgress.upsert({
+      where: {
+        userId_chapterId: {
+          userId,
+          chapterId,
+        },
+      },
+      update: {
+        isCompleted,
+      },
+      create: {
+        userId,
+        chapterId,
+        isCompleted,
+      },
+    });
+
+    return userProgress;
+  } catch (e: any) {
+    console.log("[CHAPTER]: ", e);
+    throw new Error(e);
+  }
+};

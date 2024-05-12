@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { db } from "@/database/db";
 import CourseSidebarItem from "@/components/shared/CourseSidebarItem";
+import CourseProgress from "@/components/shared/CourseProgress";
 
 interface CourseSidebarProps {
   course: Course & {
@@ -30,6 +31,13 @@ const CourseSidebar = async ({ course, progressCount }: CourseSidebarProps) => {
     <div className="flex h-full flex-col overflow-y-auto border-r shadow-sm">
       <div className="flex flex-col border-b px-8 pb-8 pt-6">
         <h1 className="font-semibold">{course.title}</h1>
+        {purchase && (
+          <div className="mt-10">
+            {/* eslint-disable-next-line spaced-comment */}
+            {/*// @ts-ignore */}
+            <CourseProgress variant="success" value={progressCount} />
+          </div>
+        )}
       </div>
       <div className="flex w-full flex-col">
         {course.chapters.map((chapter) => (

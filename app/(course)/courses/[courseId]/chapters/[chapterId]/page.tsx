@@ -7,6 +7,7 @@ import { CourseEnrollButton } from "@/components/shared/CourseEnrollButton";
 import { Separator } from "@/components/ui/separator";
 import Preview from "@/components/shared/Preview";
 import { File } from "lucide-react";
+import CourseProgressButton from "@/components/shared/CourseProgressButton";
 
 const ChapterIdPage = async ({
   params: { courseId, chapterId },
@@ -51,7 +52,12 @@ const ChapterIdPage = async ({
           <div className="flex flex-col items-center justify-between p-4 md:flex-row">
             <h2 className="mb-2 text-2xl font-semibold">{chapter.title}</h2>
             {purchase ? (
-              <></>
+              <CourseProgressButton
+                chapterId={chapterId}
+                courseId={courseId}
+                nextChapterId={nextChapter?.id}
+                isCompleted={!!userProgress?.isCompleted}
+              />
             ) : (
               <CourseEnrollButton courseId={courseId} price={course.price!} />
             )}

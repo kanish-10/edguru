@@ -41,7 +41,7 @@ const CourseLayout = async ({
 
   if (!course) return redirect("/");
 
-  const progressCount = await getProgress(courseId, userId);
+  const progressCount = await getProgress(userId, courseId);
 
   return (
     <div className="h-full">
