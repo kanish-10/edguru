@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs";
 import { db } from "@/database/db";
+import { isAdmin } from "@/lib/admin";
 
 interface CreateAttachmentProps {
   url: string;
@@ -19,7 +20,7 @@ export const createAttachment = async ({
 }: CreateAttachmentProps) => {
   try {
     const { userId } = auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
     const courseOwner = await db.course.findUnique({
       where: {
         id: courseId,
@@ -47,7 +48,7 @@ export const deleteAttachment = async ({
 }: DeleteAttachmentProps) => {
   try {
     const { userId } = auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
     const courseOwner = await db.course.findUnique({
       where: {
         id: courseId,

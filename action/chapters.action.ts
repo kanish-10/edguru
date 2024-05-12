@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs";
 import { db } from "@/database/db";
+import { isAdmin } from "@/lib/admin";
 
 interface CreateChapterProps {
   title: string;
@@ -33,7 +34,7 @@ export const createChapter = async ({
 }: CreateChapterProps) => {
   try {
     const { userId } = auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
     const courseOwner = await db.course.findUnique({
       where: {
         id: courseId,
@@ -74,7 +75,7 @@ export const chapterReorder = async ({
 }: ChapterReorderProps) => {
   try {
     const { userId } = auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
     const ownCourse = await db.course.findUnique({
       where: {
         id: courseId,
@@ -103,7 +104,7 @@ export const updateChapter = async ({
 }: UpdateChapterProps) => {
   try {
     const { userId } = auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
     // const { isPublished } = value;
     const courseOwner = await db.course.findUnique({
       where: {
@@ -134,7 +135,7 @@ export const deleteChapter = async ({ chapterId, courseId }: ChapterProps) => {
   try {
     const { userId } = auth();
 
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
 
     const courseOwner = await db.course.findUnique({
       where: {
@@ -189,7 +190,7 @@ export const publishChapter = async ({ courseId, chapterId }: ChapterProps) => {
   try {
     const { userId } = auth();
 
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
 
     const courseOwner = await db.course.findUnique({
       where: {
@@ -234,7 +235,7 @@ export const unpublishChapter = async ({
   try {
     const { userId } = auth();
 
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId || !isAdmin(userId)) throw new Error("Unauthorized");
 
     const courseOwner = await db.course.findUnique({
       where: {

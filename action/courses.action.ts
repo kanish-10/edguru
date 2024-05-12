@@ -2,6 +2,9 @@
 
 import { auth } from "@clerk/nextjs";
 import { db } from "@/database/db";
+import { Category, Chapter } from "@prisma/client";
+import { getProgress } from "@/lib/utils";
+import { isAdmin } from "@/lib/admin";
 
 interface CreateCourseProps {
   title: string;
@@ -16,10 +19,21 @@ interface UpdateCourseProps {
   value: any;
 }
 
+type CourseWithProgressWithCategory = Course & {
+  category: Category;
+  chapters: Chapter[];
+  progress: number;
+};
+
+type DashboardCourses = {
+  completedCourses: any[];
+  coursesInProgress: any[];
+};
+
 export const createCourse = async ({ title }: CreateCourseProps) => {
   try {
     const { userId } = auth();
-    if (!userId) {
+    if (!userId || !isAdmin(userId)) {
       throw new Error("Unauthorized");
     }
 
@@ -39,7 +53,7 @@ export const createCourse = async ({ title }: CreateCourseProps) => {
 export const updateCourse = async ({ courseId, value }: UpdateCourseProps) => {
   try {
     const { userId } = auth();
-    if (!userId) {
+    if (!userId || !isAdmin(userId)) {
       throw new Error("Unauthorized");
     }
 
@@ -60,7 +74,7 @@ export const deleteCourse = async ({ courseId }: Course) => {
   try {
     const { userId } = auth();
 
-    if (!userId) {
+    if (!userId || !isAdmin(userId)) {
       throw new Error("Unauthorized");
     }
 
@@ -85,7 +99,7 @@ export const deleteCourse = async ({ courseId }: Course) => {
 export const publishCourse = async ({ courseId }: Course) => {
   try {
     const { userId } = auth();
-    if (!userId) {
+    if (!userId || !isAdmin(userId)) {
       throw new Error("Unauthorized");
     }
 
@@ -131,7 +145,7 @@ export const publishCourse = async ({ courseId }: Course) => {
 export const unpublishCourse = async ({ courseId }: Course) => {
   try {
     const { userId } = auth();
-    if (!userId) {
+    if (!userId || !isAdmin(userId)) {
       throw new Error("Unauthorized");
     }
 
@@ -153,5 +167,51 @@ export const unpublishCourse = async ({ courseId }: Course) => {
     return unpublishedCourse;
   } catch (e) {
     console.log("[COURSES]: ", e);
+  }
+};
+
+export const getDashboardCourses = async (
+  userId: string,
+): Promise<DashboardCourses> => {
+  try {
+    const purchasedCourses = await db.purchase.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        course: {
+          include: {
+            category: true,
+            chapters: {
+              where: {
+                isPublished: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const courses = purchasedCourses.map(
+      (purchase: any) => purchase.course as CourseWithProgressWithCategory[],
+    );
+
+    for (const course of courses) {
+      const progress = await getProgress(userId, course.id);
+      course.progress = progress;
+    }
+
+    const completedCourses = courses.filter(
+      (course: any) => course.progress === 100,
+    );
+
+    const coursesInProgress = courses.filter(
+      (course: any) => (course.progress ?? 0) < 100,
+    );
+
+    return { completedCourses, coursesInProgress };
+  } catch (e: any) {
+    console.log("[DASHBOARD_COURSES_ERROR]: ", e.message);
+    return { completedCourses: [], coursesInProgress: [] };
   }
 };

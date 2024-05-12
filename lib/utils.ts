@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { db } from "@/database/db";
-import { Category, Course } from "@prisma/client";
+import { Category, Course, Purchase } from "@prisma/client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -110,5 +110,64 @@ export const getCourses = async ({ userId, title, categoryId }: GetCourses) => {
   } catch (e) {
     console.log("[GET_COURSES_ERROR]: ", e);
     return [];
+  }
+};
+
+type PurchaseWithCourse = Purchase & {
+  course: Course;
+};
+
+const groupByCourse = (purchases: PurchaseWithCourse[]) => {
+  const grouped: { [courseTitle: string]: number } = {};
+
+  purchases.forEach((purchase) => {
+    const courseTitle = purchase.course.title;
+
+    if (!grouped[courseTitle]) {
+      grouped[courseTitle] = 0;
+    }
+
+    grouped[courseTitle] += purchase.course.price!;
+  });
+
+  return grouped;
+};
+
+export const getAnalytics = async (userId: string) => {
+  try {
+    const purchases = await db.purchase.findMany({
+      where: {
+        course: {
+          userId,
+        },
+      },
+      include: {
+        course: true,
+      },
+    });
+
+    const groupedEarnings = groupByCourse(purchases);
+    const data = Object.entries(groupedEarnings).map(
+      ([courseTitle, total]) => ({
+        name: courseTitle,
+        total,
+      }),
+    );
+
+    const totalRevenue = data.reduce((acc, curr) => acc + curr.total, 0);
+    const totalSales = purchases.length;
+
+    return {
+      data,
+      totalRevenue,
+      totalSales,
+    };
+  } catch (error) {
+    console.log("[GET_ANALYTICS]", error);
+    return {
+      data: [],
+      totalRevenue: 0,
+      totalSales: 0,
+    };
   }
 };
